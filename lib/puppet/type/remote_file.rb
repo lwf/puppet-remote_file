@@ -26,7 +26,7 @@ Puppet::Type.newtype(:remote_file) do
     desc "MD5 checksum of this file. Will not download if local file matches"
     validate do |value|
       unless value.empty? or value.length == 32
-        raise ArgumentError.new("%s is not a valid MD5 hash, has to be exactly 32 bytes long" % value)
+        raise ArgumentError.new("%s is not a valid MD5 hash, should be exactly 32 bytes long" % value)
       end
     end
   end
