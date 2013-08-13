@@ -1,30 +1,18 @@
-require 'digest/md5'
 require 'fileutils'
 require 'net/http'
 require 'net/https'
 require 'uri'
 
-Puppet::Type.type(:remote_file).provide(:ruby) do
+require 'pathname'
+require Pathname.new(__FILE__).dirname.dirname.expand_path + 'remote_file'
+
+Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remote_file) do
   desc "remote_file using Net::HTTP from Ruby's standard library."
 
   mk_resource_methods
 
   def create
     get @resource[:source]
-  end
-
-  def destroy
-    File.unlink @resource[:name]
-  end
-
-  def exists?
-    if File.file? @resource[:name]
-      if cs = @resource[:checksum]
-        Digest::MD5.file(@resource[:name]) == cs
-      else
-        true
-      end
-    end
   end
 
   private
