@@ -45,7 +45,7 @@ Puppet::Type.type(:remote_file).provide(:ruby) do
     end
     c = Net::HTTP.new(p.host, p.port)
     c.use_ssl = p.scheme == "https" ? true : false
-    c.request_get(p.path) do |req|
+    c.request_get(p.request_uri) do |req|
       case req.code
       when /30[12]/
         get req['location'], i+1
