@@ -29,7 +29,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
 
   def http_get(p, i=0)
     if i > 5
-      raise InfiniteRedirect.new "Redirected more than 5 times, aborting."
+      raise Puppet::Error.new "Redirected more than 5 times when trying to download #{@resource[:name]}, aborting."
     end
     c = Net::HTTP.new(p.host, p.port)
     c.use_ssl = p.scheme == "https" ? true : false
@@ -42,6 +42,8 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
           req.read_body { |buf| fh.write buf }
           fh.flush
         end
+      else
+        raise Puppet::Error.new "Unexpected response code #{req.code}: #{req.read_body}"
       end
     end
   end
