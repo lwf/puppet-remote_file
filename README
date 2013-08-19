@@ -1,16 +1,11 @@
 remote_file
 
-This is the remote_file module.
+Provides remote_file, a resource to download remote files. Documentation and tests forthcoming.
 
 License
 -------
-
+Apache License Version 2.0
 
 Contact
 -------
-
-
-Support
--------
-
-Please log tickets and issues at our [Projects site](http://projects.example.com)
+Torbjörn Norinder
