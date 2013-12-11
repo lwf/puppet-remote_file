@@ -7,7 +7,7 @@ Puppet::Type.newtype(:remote_file) do
     desc "File path"
     isnamevar
     validate do |value|
-      unless value =~ /^\/.*[^\/]$/
+      unless value =~ /^(\/.*[^\/]|[c-zC-Z]:(\/|\\).*[^(\/|\\)])$/
         raise ArgumentError.new("%s is not a valid fully qualified path" % value)
       end
     end
