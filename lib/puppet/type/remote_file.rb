@@ -33,4 +33,23 @@ Puppet::Type.newtype(:remote_file) do
       end
     end
   end
+
+  newparam(:verify_peer) do
+    desc "Whether or not to require verification of the the remote server identity"
+    validate do |value|
+      unless (value =~ /true|false/i or [true, false].include?(value))
+        raise ArgumentError.new("#{value} is not a boolean, should be either true or false")
+      end
+    end
+    munge do |value|
+      case value
+      when /true/i
+        true
+      when /false/i
+        false
+      else
+        value
+      end
+    end
+  end
 end
