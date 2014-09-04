@@ -6,7 +6,7 @@ Puppet::Type.newtype(:remote_file) do
     defaultto :present
   end
 
-  newparam(:name) do
+  newparam(:path) do
     desc "File path"
     isnamevar
     validate do |value|
