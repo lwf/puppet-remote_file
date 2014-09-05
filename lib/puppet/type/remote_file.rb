@@ -1,7 +1,10 @@
 require 'uri'
 
 Puppet::Type.newtype(:remote_file) do
-  ensurable
+  ensurable do
+    defaultvalues
+    defaultto :present
+  end
 
   newparam(:name) do
     desc "File path"
