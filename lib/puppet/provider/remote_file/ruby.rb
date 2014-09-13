@@ -23,13 +23,13 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     when /https?/
       http_get p, i
     when "file"
-      FileUtils.copy p.path, @resource[:name]
+      FileUtils.copy p.path, @resource[:path]
     end
   end
 
   def http_get(p, i=0)
     if i > 5
-      raise Puppet::Error.new "Redirected more than 5 times when trying to download #{@resource[:name]}, aborting."
+      raise Puppet::Error.new "Redirected more than 5 times when trying to download #{@resource[:path]}, aborting."
     end
     c = Net::HTTP.new(p.host, p.port)
     c.use_ssl = p.scheme == "https" ? true : false
@@ -38,7 +38,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
       when /30[12]/
         get req['location'], i+1
       when "200"
-        File.open(@resource[:name], 'w') do |fh|
+        File.open(@resource[:path], 'w') do |fh|
           req.read_body { |buf| fh.write buf }
           fh.flush
         end
