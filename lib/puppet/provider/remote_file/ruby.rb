@@ -33,6 +33,9 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     end
     c = Net::HTTP.new(p.host, p.port)
     c.use_ssl = p.scheme == "https" ? true : false
+    if c.use_ssl? and @resource[:verify_peer] == false
+      c.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
     c.request_get(p.request_uri) do |req|
       case req.code
       when /30[12]/
