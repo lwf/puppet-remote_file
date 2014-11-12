@@ -6,7 +6,9 @@ require 'uri'
 require 'pathname'
 require Pathname.new(__FILE__).dirname.dirname.expand_path + 'remote_file'
 
-Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remote_file) do
+Puppet::Type.type(:remote_file).provide(
+  :ruby, :parent => Puppet::Provider::Remote_file
+) do
   desc "remote_file using Net::HTTP from Ruby's standard library."
 
   mk_resource_methods
@@ -19,7 +21,11 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   private
 
   def validate_checksum
-    raise Puppet::Error.new "Inconsistent checksums. Checksum of fetched file is #{calculated_checksum}. You specified #{specified_checksum}" if calculated_checksum != specified_checksum
+    if calculated_checksum != specified_checksum
+      raise Puppet::Error.new "Inconsistent checksums. Checksum of fetched "\
+                              "file is #{calculated_checksum}. You specified "\
+                              "#{specified_checksum}"
+    end
   end
 
   def specified_checksum
@@ -46,7 +52,8 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
 
   def http_get(p, i=0)
     if i > 5
-      raise Puppet::Error.new "Redirected more than 5 times when trying to download #{@resource[:path]}, aborting."
+      raise Puppet::Error.new "Redirected more than 5 times when trying to "\
+                              "download #{@resource[:path]}, aborting."
     end
     c = Net::HTTP.new(p.host, p.port)
     c.use_ssl = p.scheme == "https" ? true : false
@@ -63,7 +70,8 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
           fh.flush
         end
       else
-        raise Puppet::Error.new "Unexpected response code #{req.code}: #{req.read_body}"
+        raise Puppet::Error.new "Unexpected response code #{req.code}: "\
+                                "#{req.read_body}"
       end
     end
   end
