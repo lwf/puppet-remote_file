@@ -13,9 +13,26 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
 
   def create
     get @resource[:source]
+    validate_checksum if checksum_specified?
   end
 
   private
+
+  def validate_checksum
+    raise Puppet::Error.new "Inconsistent checksums. Checksum of fetched file is #{calculated_checksum}. You specified #{specified_checksum}" if calculated_checksum != specified_checksum
+  end
+
+  def specified_checksum
+    @resource[:checksum]
+  end
+
+  def calculated_checksum
+    Digest::MD5.file(@resource[:name]) 
+  end
+
+  def checksum_specified?
+    ! specified_checksum.nil?
+  end
 
   def get(url, i=0)
     p = URI.parse url
