@@ -168,6 +168,10 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
       options[:headers].each {|key,value| request[key] = value }
     end
 
+    if @resource[:username]
+      request.basic_auth(@resource[:username], @resource[:password])
+    end
+
     # Connect and perform the request
     http_method = connection.method("request_#{verb.downcase}".to_sym)
     recursive_response = nil

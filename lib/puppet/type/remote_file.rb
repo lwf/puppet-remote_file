@@ -101,4 +101,20 @@ Puppet::Type.newtype(:remote_file) do
       end
     end
   end
+
+  newparam(:username) do
+    desc "Basic authentication username"
+  end
+
+  newparam(:password) do
+    desc "Basic authentication password"
+  end
+
+  validate do
+    # :username and :password must be specified together. It is an error to
+    # specify one but not the other. If only one is specified, fail validation.
+    if !parameters[:username].nil? ^ !parameters[:password].nil?
+      fail "username and password must both be specified if either is specified"
+    end
+  end
 end
