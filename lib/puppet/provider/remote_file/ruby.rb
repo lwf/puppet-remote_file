@@ -19,6 +19,8 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     'head' => Net::HTTP::Head,
   }
 
+  # Create the resource if it does not exist.
+  #
   def create
     get @resource[:source]
     validate_checksum if checksum_specified?
@@ -49,18 +51,27 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
 
   private
 
+  # Perform a validation of the checksum.
+  # Raise if the checksum is found to be inconsistent.
+  #
   def validate_checksum
     raise Puppet::Error.new "Inconsistent checksums. Checksum of fetched file is #{calculated_checksum}. You specified #{specified_checksum}" if calculated_checksum != specified_checksum
   end
 
+  # Return the resource checksum
+  #
   def specified_checksum
     @resource[:checksum]
   end
 
+  # Return the checksum calculated from the local resource.
+  #
   def calculated_checksum
     Digest::MD5.file(@resource[:name]) 
   end
 
+  # Return true if the resource specifies a checksum
+  #
   def checksum_specified?
     ! specified_checksum.nil?
   end
