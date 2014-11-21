@@ -1,9 +1,58 @@
 require 'uri'
 
 Puppet::Type.newtype(:remote_file) do
+
+  feature :lastmodified, "The provider can check http last-modified"
+
   ensurable do
     defaultvalues
     defaultto :present
+
+    newvalue(:latest, :required_features => :lastmodified) do
+      provider.create
+    end
+
+    def should_to_s(newvalue = @should)
+      if newvalue == :latest
+        # This code may throw errors if we cannot retrieve the latest available
+        # version. If we cannot determine the remote mtime, just fall back to
+        # saying we're trying to enforce "latest".
+        begin
+          provider.remote_mtime.iso8601
+        rescue Exception
+          'latest'
+        end
+      else
+        super newvalue
+      end
+    end
+
+    def change_to_s(current_value, new_value)
+      if current_value == :absent and @should.include?(:latest)
+        "created with last-modified version #{should_to_s(new_value)}"
+      elsif @should.include?(:latest)
+        "replaced #{current_value} version with last-modified version, #{should_to_s(new_value)}"
+      else
+        super(current_value, new_value)
+      end
+    end
+
+    def retrieve
+      if @should.include?(:latest)
+        return :absent unless provider.exists?
+        provider.local_mtime.iso8601
+      else
+        super
+      end
+    end
+
+    def insync?(is)
+      if @should.include?(:latest)
+        is == provider.remote_mtime.iso8601
+      else
+        super
+      end
+    end
   end
 
   newparam(:path) do

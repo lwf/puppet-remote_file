@@ -2,12 +2,15 @@ require 'fileutils'
 require 'net/http'
 require 'net/https'
 require 'uri'
+require 'time'
 
 require 'pathname'
 require Pathname.new(__FILE__).dirname.dirname.expand_path + 'remote_file'
 
 Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remote_file) do
   desc "remote_file using Net::HTTP from Ruby's standard library."
+
+  has_feature :lastmodified
 
   mk_resource_methods
 
@@ -19,6 +22,29 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   def create
     get @resource[:source]
     validate_checksum if checksum_specified?
+  end
+
+  # Returns the mtime of the remote source.
+  #
+  def remote_mtime
+    return @remote_mtime if @remote_mtime
+    src = URI.parse(@resource[:source])
+    case src.scheme
+    when /https?/
+      response = http_head(src)
+      if !response.header['last-modified']
+        raise Puppet::Error.new "#{src} does not provide last-modified header"
+      end
+      @remote_mtime = Time.parse(response.header['last-modified'])
+    else
+      raise Puppet::Error.new "Unable to ensure latest on #{src}"
+    end
+  end
+
+  # Returns the mtime of the local resource.
+  #
+  def local_mtime
+    stat_modified = File.stat(@resource[:path]).mtime
   end
 
   private
@@ -51,6 +77,18 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     end
   end
 
+  # Perform an HTTP HEAD request and return the response.
+  #
+  def http_head(uri)
+    begin
+      null = File.open(File::NULL)
+      response = http(uri, null, :http_method => 'head')
+    ensure
+      null.close
+      response
+    end
+  end
+
   # Perform an HTTP GET request, saving the body in the specified download
   # path, and return the result.
   #
@@ -67,6 +105,14 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
       if response.kind_of?(Net::HTTPSuccess)
         tempfile.flush
         FileUtils.mv(tempfile.path, download_path)
+
+        # If the fileserver supports the last-modified header, make sure the
+        # file saved has a matching timestamp. This may be used later to do a
+        # very rough ensure=latest kind of check.
+        if response.header['last-modified']
+          time = Time.parse(response.header['last-modified'])
+          File.utime(time, time, download_path)
+        end
       end
     ensure
       tempfile.close
