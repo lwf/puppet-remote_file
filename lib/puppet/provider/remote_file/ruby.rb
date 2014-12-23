@@ -115,7 +115,17 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
       # If download was successful, copy the tempfile over to the resource path.
       if response.kind_of?(Net::HTTPSuccess)
         tempfile.flush
-        FileUtils.mv(tempfile.path, download_path)
+
+        # Try to move the file from the temp location to the final destination.
+        # If the move operation fails due to permission denied, try a copy
+        # before giving up. On some platforms (Windows) file locking or weird
+        # permissions may cause the mv operation to fail but will still allow
+        # the copy operation to succeed.
+        begin
+          FileUtils.mv(tempfile.path, download_path)
+        rescue Errno::EACCES
+          FileUtils.cp(tempfile.path, download_path)
+        end
 
         # If the fileserver supports the last-modified header, make sure the
         # file saved has a matching timestamp. This may be used later to do a
