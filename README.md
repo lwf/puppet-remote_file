@@ -95,6 +95,9 @@ remote_file { 'jenkins.war':
   downloaded if the local file's checksum matches this value.
 * `verify_peer`: Boolean. Whether or not to require verification of the the
   remote server identity.
+* `username`: Username to use for basic authentication.
+* `password`: Password to use for basic authentication.
+
 
 ### Provider: ruby
 
@@ -105,9 +108,6 @@ using Net::HTTP from Ruby's standard library.
 
 Currently only http, https, and file URI sources are supported by the default
 ruby provider.
-
-Support for username/password authentication to HTTP servers has not yet been
-implemented.
 
 ## License
 
