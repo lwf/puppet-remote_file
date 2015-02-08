@@ -110,6 +110,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     # leaving a partially downloaded file in place
     begin
       tempfile = Tempfile.new('remote_file')
+      tempfile.binmode
       response = http(uri, tempfile)
 
       # If download was successful, copy the tempfile over to the resource path.
