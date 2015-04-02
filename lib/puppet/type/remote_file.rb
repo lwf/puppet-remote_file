@@ -110,11 +110,45 @@ Puppet::Type.newtype(:remote_file) do
     desc "Basic authentication password"
   end
 
+  newparam(:proxy_host) do
+    desc "HTTP(S) Proxy host"
+  end
+
+  newparam(:proxy_port) do
+    desc "HTTP(S) Proxy port"
+  end
+
+  newparam(:proxy_username) do
+    desc "HTTP(S) Proxy username"
+  end
+
+  newparam(:proxy_password) do
+    desc "HTTP(S) Proxy password"
+  end
+
   validate do
     # :username and :password must be specified together. It is an error to
     # specify one but not the other. If only one is specified, fail validation.
     if !parameters[:username].nil? ^ !parameters[:password].nil?
       fail "username and password must both be specified if either is specified"
+    end
+
+    # :proxy_host and :proxy_port must be specified together. It is an error to
+    # specify one but not the other. If only one is specified, fail validation.
+    if !parameters[:proxy_host].nil? ^ !parameters[:proxy_port].nil?
+      fail "proxy_host and proxy_port must both be specified if either is specified"
+    end
+
+    # :proxy_username and :proxy_password must be specified together. It is an error to
+    # specify one but not the other. If only one is specified, fail validation.
+    if !parameters[:proxy_username].nil? ^ !parameters[:proxy_password].nil?
+      fail "proxy_username and proxy_password must both be specified if either is specified"
+    end
+
+    # proxy_username/proxy_password should only be specified if
+    # proxy_host/proxy_port are.
+    if parameters[:proxy_host].nil? and !parameters[:proxy_username].nil?
+      fail "proxy_username and proxy_password may only be specified if proxy_host and proxy_port are also specified"
     end
   end
 end

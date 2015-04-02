@@ -97,7 +97,12 @@ remote_file { 'jenkins.war':
   remote server identity.
 * `username`: Username to use for basic authentication.
 * `password`: Password to use for basic authentication.
-
+* `proxy_host`: The host name of an http/https proxy to use.
+* `proxy_port`: If using a proxy, the port to use to connect to the proxy.
+* `proxy_username`: If using a proxy, the username to use to authenticate to
+  the proxy.
+* `proxy_password`: If using a proxy, the password to use to authenticate to
+  the proxy.
 
 ### Provider: ruby
 

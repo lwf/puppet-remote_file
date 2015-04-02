@@ -162,8 +162,15 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     raise ArgumentError, 'HTTP redirect too deep' if limit == 0
 
     # Create the Net::HTTP connection and  request objects
-    connection = Net::HTTP.new(uri.host, uri.port)
     request    = REQUEST_TYPES[verb.to_s.downcase].new(uri.request_uri)
+    connection = Net::HTTP.new(
+      uri.host,
+      uri.port,
+      @resource[:proxy_host] || nil,
+      @resource[:proxy_port] || nil,
+      @resource[:proxy_username] || nil,
+      @resource[:proxy_password] || nil
+    )
 
     # Configure the Net::HTTP connection object
     if uri.scheme == 'https'
