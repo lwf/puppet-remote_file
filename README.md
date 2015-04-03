@@ -80,6 +80,39 @@ remote_file { 'jenkins.war':
 }
 ```
 
+### Using a Proxy
+
+The `remote_file` type provides several proxy-related parameters. You should
+choose between specifying `proxy` or specifying `proxy_host` and `proxy_port`.
+The following two examples are equivalent.
+
+Using the `proxy` parameter:
+
+```puppet
+remote_file { '/path/to/your/file':
+  ensure   => present,
+  source   => 'http://example.com/file.tar.gz',
+  checksum => 'd41d8cd98f00b204e9800998ecf8427e'
+  proxy    => 'http://192.168.12.40:3128',
+}
+```
+
+Using `proxy_host` and `proxy_port` instead:
+
+```puppet
+remote_file { '/path/to/your/file':
+  ensure     => present,
+  source     => 'http://example.com/file.tar.gz',
+  checksum   => 'd41d8cd98f00b204e9800998ecf8427e'
+  proxy_host => '192.168.12.40',
+  proxy_port => 3128,
+}
+```
+
+If a username and/or password are required to authenticate to your proxy, you
+can specify these either as part of the `proxy` URI, or separately using the
+`proxy_username` and `proxy_password` parameters.
+
 ## Reference
 
 ### Type: remote_file
@@ -97,8 +130,12 @@ remote_file { 'jenkins.war':
   remote server identity.
 * `username`: Username to use for basic authentication.
 * `password`: Password to use for basic authentication.
-* `proxy_host`: The host name of an http/https proxy to use.
-* `proxy_port`: If using a proxy, the port to use to connect to the proxy.
+* `proxy`: The full URI of an http/https proxy to use, as it would be specified
+  in an environment variable; e.g. `http://myproxy.local:3128`.
+* `proxy_host`: The host name of an http/https proxy to use. Not required if
+  the `proxy` parameter is used.
+* `proxy_port`: If using a proxy, the port to use to connect to the proxy. Not
+  required if the `proxy` parameter is used.
 * `proxy_username`: If using a proxy, the username to use to authenticate to
   the proxy.
 * `proxy_password`: If using a proxy, the password to use to authenticate to
