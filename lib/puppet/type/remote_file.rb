@@ -110,11 +110,90 @@ Puppet::Type.newtype(:remote_file) do
     desc "Basic authentication password"
   end
 
+  newparam(:proxy) do
+    desc "HTTP(S) Proxy URI. Example: http://192.168.12.40:3218"
+
+    validate do |url|
+      URI.parse(url).kind_of?(URI::HTTP)
+    end
+
+    munge do |url|
+      URI.parse(url)
+    end
+  end
+
+  newparam(:proxy_host) do
+    desc "HTTP(S) Proxy host. Do not use this if specifying the proxy parameter"
+
+    validate do |value|
+      if @resource[:proxy] && @resource[:proxy].host != value
+        raise "Conflict between proxy and proxy_host parameters."
+      end
+    end
+
+    defaultto { @resource[:proxy] ? @resource[:proxy].host : nil }
+  end
+
+  newparam(:proxy_port) do
+    desc "HTTP(S) Proxy port. Do not use this if specifying the proxy parameter"
+
+    validate do |value|
+      if @resource[:proxy] && @resource[:proxy].port != value
+        raise "Conflict between proxy and proxy_port parameters."
+      end
+    end
+
+    defaultto { @resource[:proxy] ? @resource[:proxy].port : nil }
+  end
+
+  newparam(:proxy_username) do
+    desc "HTTP(S) Proxy username"
+
+    validate do |value|
+      if @resource[:proxy] && @resource[:proxy].user != value
+        raise "Conflict between proxy and proxy_username parameters."
+      end
+    end
+
+    defaultto { @resource[:proxy] ? @resource[:proxy].user : nil }
+  end
+
+  newparam(:proxy_password) do
+    desc "HTTP(S) Proxy password"
+
+    validate do |value|
+      if @resource[:proxy] && @resource[:proxy].password != value
+        raise "Conflict between proxy and proxy_password parameters."
+      end
+    end
+
+    defaultto { @resource[:proxy] ? @resource[:proxy].password : nil }
+  end
+
+
   validate do
     # :username and :password must be specified together. It is an error to
     # specify one but not the other. If only one is specified, fail validation.
     if !parameters[:username].nil? ^ !parameters[:password].nil?
       fail "username and password must both be specified if either is specified"
+    end
+
+    # :proxy_host and :proxy_port must be specified together. It is an error to
+    # specify one but not the other. If only one is specified, fail validation.
+    if !parameters[:proxy_host].nil? ^ !parameters[:proxy_port].nil?
+      fail "proxy_host and proxy_port must both be specified if either is specified"
+    end
+
+    # :proxy_username and :proxy_password must be specified together. It is an error to
+    # specify one but not the other. If only one is specified, fail validation.
+    if !parameters[:proxy_username].nil? ^ !parameters[:proxy_password].nil?
+      fail "proxy_username and proxy_password must both be specified if either is specified"
+    end
+
+    # proxy_username/proxy_password should only be specified if
+    # proxy_host/proxy_port are.
+    if parameters[:proxy_host].nil? and !parameters[:proxy_username].nil?
+      fail "proxy_username and proxy_password may only be specified if proxy_host and proxy_port are also specified"
     end
   end
 end
