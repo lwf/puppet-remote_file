@@ -92,7 +92,7 @@ Puppet::Type.newtype(:remote_file) do
       end
     end
 
-    defaultto { @resource[:checksum] ? :md5 : nil }
+    defaultto { @resource[:checksum] ? "md5" : nil }
   end
 
   newparam(:verify_peer) do
