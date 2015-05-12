@@ -46,7 +46,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   # Returns the mtime of the local resource.
   #
   def local_mtime
-    stat_modified = File.stat(@resource[:path]).mtime
+    File.stat(@resource[:path]).mtime
   end
 
   private
@@ -58,23 +58,6 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     raise Puppet::Error.new "Inconsistent checksums. Checksum of fetched file is #{calculated_checksum}. You specified #{specified_checksum}" if calculated_checksum != specified_checksum
   end
 
-  # Return the resource checksum
-  #
-  def specified_checksum
-    @resource[:checksum]
-  end
-
-  # Return the checksum calculated from the local resource.
-  #
-  def calculated_checksum
-    Digest::MD5.file(@resource[:name]) 
-  end
-
-  # Return true if the resource specifies a checksum
-  #
-  def checksum_specified?
-    ! specified_checksum.nil?
-  end
 
   # Determine and begin the appropriate method of getting the target file.
   #
@@ -190,8 +173,6 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
       request.basic_auth(@resource[:username], @resource[:password])
     end
 
-    # Connect and perform the request
-    http_method = connection.method("request_#{verb.downcase}".to_sym)
     recursive_response = nil
     response = connection.start do |http|
       http.request(request) do |resp|
