@@ -2,11 +2,21 @@
   "name": "lwf-remote_file",
   "version": "0.2.3",
   "author": "lwf",
-  "license": "Apache License, Version 2.0",
+  "license": "Apache-2.0",
   "summary": "A resource/provider for remote files.",
   "source": "https://github.com/lwf/puppet-remote_file",
   "project_page": "https://github.com/lwf/puppet-remote_file",
   "issues_url": "https://github.com/lwf/puppet-remote_file/issues",
   "tags": ["file", "remote", "http", "https"],
-  "dependencies": [ ]
+  "dependencies": [ ],
+  "operatingsystem_support": [
+    { "operatingsystem": "RedHat"  },
+    { "operatingsystem": "Windows" },
+    { "operatingsystem": "Debian"  },
+    { "operatingsystem": "Ubuntu"  },
+    { "operatingsystem": "OS X"    },
+    { "operatingsystem": "Solaris" },
+    { "operatingsystem": "SLES"    },
+    { "operatingsystem": "AIX"     }
+  ]
 }
