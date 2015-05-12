@@ -1,4 +1,5 @@
 require 'uri'
+require 'puppet/util/checksums'
 
 Puppet::Type.newtype(:remote_file) do
 
@@ -75,12 +76,23 @@ Puppet::Type.newtype(:remote_file) do
   end
 
   newparam(:checksum) do
-    desc "MD5 checksum of this file. Will not download if local file matches"
+    desc "Checksum of this file. Will not download if local file matches"
     validate do |value|
-      unless value.empty? or value.length == 32
-        raise ArgumentError.new("%s is not a valid MD5 hash, should be exactly 32 bytes long" % value)
+      unless value.empty? or value =~ /^\w+$/
+        raise ArgumentError.new("%s is not a valid checksum" % value)
       end
     end
+  end
+
+  newparam(:checksum_type) do
+    desc "Checksum type to use when verifying file against checksum attribute."
+    validate do |value|
+      unless Puppet::Util::Checksums.known_checksum_types.include? value.to_sym
+        raise ArgumentError.new("%s is not a valid checksum type" % value)
+      end
+    end
+
+    defaultto { @resource[:checksum] ? :md5 : nil }
   end
 
   newparam(:verify_peer) do
@@ -172,6 +184,11 @@ Puppet::Type.newtype(:remote_file) do
 
 
   validate do
+    # checksum_type and checksum must be specified together
+    if !parameters[:checksum].nil? ^ !parameters[:checksum_type].nil?
+      fail "checksum and checksum_type must both be specified if either is specified"
+    end
+
     # :username and :password must be specified together. It is an error to
     # specify one but not the other. If only one is specified, fail validation.
     if !parameters[:username].nil? ^ !parameters[:password].nil?

@@ -54,7 +54,7 @@ subsequent runs, so long as that file still exists, the resource will be
 considered in sync.
 
 The `remote_file` type supports tighter synchronization tolerances either
-through the specification of an md5 checksum or by checking a remote HTTP
+through the specification of a checksum or by checking a remote HTTP
 server's Last-Modified header. For example, the following resource specifies a
 checksum:
 
@@ -63,6 +63,18 @@ remote_file { '/path/to/your/file':
   ensure   => present,
   source   => 'http://example.com/file.tar.gz',
   checksum => 'd41d8cd98f00b204e9800998ecf8427e'
+}
+```
+
+The default hash algorithm is md5. The hash algorithm used for checksumming may be
+specified using the `checksum_type` parameter:
+
+```puppet
+remote_file { '/path/to/your/file':
+  ensure        => present,
+  source        => 'http://example.com/file.tar.gz',
+  checksum      => 'f287b50892d92dfae52c0d32ddcb5b60a9acfa59e9222a0f59969453545e9ca4',
+  checksum_type => 'sha256'
 }
 ```
 
@@ -124,8 +136,11 @@ can specify these either as part of the `proxy` URI, or separately using the
   content to.
 * `source`: The source location of the file, or where to get it from if it is
   needed. This should be a URI.
-* `checksum`: MD5 checksum of this file. A new copy of the file will not be
-  downloaded if the local file's checksum matches this value.
+* `checksum`: Checksum of this file. Hash function used is specified by the `checksum_type`
+  parameter. A new copy of the file will not be downloaded if the local file's 
+  checksum matches this value.
+* `checksum_type`: Hash algorithm to use for checksumming. Supports the same arguments
+  as [the checksum parameter of the File type](https://docs.puppetlabs.com/references/latest/type.html#file-attribute-checksum).
 * `verify_peer`: Boolean. Whether or not to require verification of the the
   remote server identity.
 * `username`: Username to use for basic authentication.
