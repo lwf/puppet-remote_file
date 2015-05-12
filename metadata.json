@@ -1,6 +1,6 @@
 {
   "name": "lwf-remote_file",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "author": "lwf",
   "license": "Apache-2.0",
   "summary": "A resource/provider for remote files.",
