@@ -155,6 +155,8 @@ can specify these either as part of the `proxy` URI, or separately using the
   the proxy.
 * `proxy_password`: If using a proxy, the password to use to authenticate to
   the proxy.
+* `headers`: Hash containing extra HTTP headers (can be
+  overriden by other conflicting parameters)
 
 ### Provider: ruby
 
