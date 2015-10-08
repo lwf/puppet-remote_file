@@ -166,7 +166,9 @@ using Net::HTTP from Ruby's standard library.
 ## Limitations
 
 Currently only http, https, and file URI sources are supported by the default
-ruby provider.
+ruby provider. 
+
+Ruby versions older than 1.9 are not supported due to lack of certain features.
 
 ## License
 
