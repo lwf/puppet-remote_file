@@ -146,6 +146,10 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
 
     # Create the Net::HTTP connection and  request objects
     request    = REQUEST_TYPES[verb.to_s.downcase].new(uri.request_uri)
+    if @resource[:headers]
+      request.initialize_http_header(@resource[:headers])
+    end
+
     connection = Net::HTTP.new(
       uri.host,
       uri.port,
@@ -168,7 +172,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     if options[:headers]
       options[:headers].each {|key,value| request[key] = value }
     end
-
+      
     if @resource[:username]
       request.basic_auth(@resource[:username], @resource[:password])
     end

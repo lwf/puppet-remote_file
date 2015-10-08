@@ -182,6 +182,11 @@ Puppet::Type.newtype(:remote_file) do
     defaultto { @resource[:proxy] ? @resource[:proxy].password : nil }
   end
 
+  newparam(:headers) do
+    desc "HTTP(S) headers. Can be overwriten by others conflicting options"  
+    defaultto { {} }
+  end
+  
 
   validate do
     # checksum_type and checksum must be specified together
