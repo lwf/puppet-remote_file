@@ -157,6 +157,9 @@ can specify these either as part of the `proxy` URI, or separately using the
   the proxy.
 * `headers`: Hash containing extra HTTP headers (can be
   overriden by other conflicting parameters)
+* `owner`: owner attribute of the file. See the File type for details.
+* `group`: group attribute of the file. See the File type for details.
+* `mode`: mode attribute of the file. See the File type for details.
 
 ### Provider: ruby
 
