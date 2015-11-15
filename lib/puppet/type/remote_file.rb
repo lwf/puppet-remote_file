@@ -5,6 +5,17 @@ Puppet::Type.newtype(:remote_file) do
 
   feature :lastmodified, "The provider can check http last-modified"
 
+  # The remote_file type generates a file resource to manage things like owner,
+  # mode, etc. This is the list of attributes it will accept and pass through
+  # to the generated file resource.
+  FILE_PARAMS ||= [:owner, :group, :mode]
+
+  FILE_PARAMS.each do |param|
+    newparam(param) do
+      desc "#{param.to_s} attribute of the file. See the File type for details."
+    end
+  end
+
   ensurable do
     defaultvalues
     defaultto :present
@@ -218,4 +229,57 @@ Puppet::Type.newtype(:remote_file) do
       fail "proxy_username and proxy_password may only be specified if proxy_host and proxy_port are also specified"
     end
   end
+
+  def generate
+    file_params_with_values = FILE_PARAMS.reject{ |param| self[param].nil? }
+
+    # If no file-related parameters have been declared, there's nothing
+    # that needs to be done.
+    return [ ] if file_params_with_values.empty?
+
+    # It may be the case the user has directly declared the file resource
+    # elsewhere in code. If they have, we need to consider this a duplicate
+    # resource definition error unless their parameters are the same as ours.
+    if res = catalog.resource("File[#{self[:path]}]")
+      # If the declared resource has the same parameters we're enforcing, we
+      # can co-opt it and don't need to error out.
+      file_params_with_values.each do |param|
+        # If even one parameter is different, there's a conflict.
+        if res.original_parameters[param] != self[param]
+          message = "unable to ensure \"#{file_params_with_values.to_s}\" attribute(s) due to the file resource already being declared in #{res.file}:#{res.line}"
+          raise Puppet::Resource::Catalog::DuplicateResourceError, message
+        end
+      end
+    end
+
+    # All checks have passed. Generate a file resource to manage the file
+    # attributes passed in.
+    file_opts = {
+      :ensure => self[:ensure] == :absent ? :absent : :file,
+      :path   => self[:path],
+    }.merge(
+      Hash[file_params_with_values.map{ |param| [param, self[param]] }]
+    )
+
+    [Puppet::Type.type(:file).new(file_opts)]
+  end
+
+  # This is necessary to propogate subscribe/notify relationships on the
+  # remote_file resource on to the generated file resource.
+  def eval_generate
+    res = catalog.resource("File[#{self[:path]}]")
+
+    # Determine if the file resource found is related or relevant to the
+    # remote_file. Only if it is related/relevant should a relationship be
+    # established.
+    params = FILE_PARAMS.reject{ |param| self.original_parameters[param].nil? }
+    return [ ] if params.empty?
+
+    invalid = params.any? do |param|
+      res.original_parameters[param] != self.original_parameters[param]
+    end
+
+    (not invalid) ? [res] : [ ]
+  end
+
 end
