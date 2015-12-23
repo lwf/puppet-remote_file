@@ -132,8 +132,6 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   # the final HTTPResponse.
   #
   # @param uri [URI::HTTP] the uri to perform the request against
-  # @param io_ready_to_write [IO] an open file or other IO object ready to
-  #        write. The response body will be written to this object.
   # @param options [Hash] a hash of options to adjust behavior
   #
 
@@ -184,7 +182,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
         when Net::HTTPRedirection
           next_opts = options.merge(:limit => limit - 1)
           next_loc  = URI.parse(resp['location'])
-          recursive_response = http(next_loc, io_ready_to_write, next_opts)
+          recursive_response = http(next_loc, next_opts, &blk)
         when Net::HTTPSuccess
           yield resp if block_given?
         else
