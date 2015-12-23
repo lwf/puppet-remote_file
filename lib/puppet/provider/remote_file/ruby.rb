@@ -74,13 +74,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   # Perform an HTTP HEAD request and return the response.
   #
   def http_head(uri)
-    begin
-      null = File.open(File::NULL)
-      response = http(uri, null, :http_method => 'head')
-    ensure
-      null.close
-      response
-    end
+    http(uri, :http_method => 'head')
   end
 
   # Perform an HTTP GET request, saving the body in the specified download
@@ -94,7 +88,11 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     begin
       tempfile = Tempfile.new('remote_file')
       tempfile.binmode
-      response = http(uri, tempfile)
+      response = http(uri) do |resp|
+        resp.read_body do |chunk|
+          tempfile.write(chunk)
+        end
+      end
 
       # If download was successful, copy the tempfile over to the resource path.
       if response.kind_of?(Net::HTTPSuccess)
@@ -138,7 +136,8 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   #        write. The response body will be written to this object.
   # @param options [Hash] a hash of options to adjust behavior
   #
-  def http(uri, io_ready_to_write, options = {})
+
+  def http(uri, options = {}, &blk)
     verb    = options[:http_method] || 'get'
     limit   = options[:limit]       || 10
 
@@ -187,9 +186,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
           next_loc  = URI.parse(resp['location'])
           recursive_response = http(next_loc, io_ready_to_write, next_opts)
         when Net::HTTPSuccess
-          resp.read_body do |chunk|
-            io_ready_to_write.write(chunk)
-          end
+          yield resp if block_given?
         else
           raise Puppet::Error.new "Unexpected response code #{resp.code}: #{resp.read_body}"
         end
