@@ -30,7 +30,7 @@ Puppet::Type.newtype(:remote_file) do
         # version. If we cannot determine the remote mtime, just fall back to
         # saying we're trying to enforce "latest".
         begin
-          provider.remote_mtime.iso8601
+          provider.remote_mtime.to_i.to_s
         rescue Exception
           'latest'
         end
@@ -52,7 +52,7 @@ Puppet::Type.newtype(:remote_file) do
     def retrieve
       if @should.include?(:latest)
         return :absent unless provider.exists?
-        provider.local_mtime.iso8601
+        provider.local_mtime.to_i
       else
         super
       end
@@ -60,7 +60,7 @@ Puppet::Type.newtype(:remote_file) do
 
     def insync?(is)
       if @should.include?(:latest)
-        is == provider.remote_mtime.iso8601
+        is == provider.remote_mtime.to_i
       else
         super
       end
