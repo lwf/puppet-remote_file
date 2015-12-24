@@ -8,7 +8,7 @@ Puppet::Type.newtype(:remote_file) do
   # The remote_file type generates a file resource to manage things like owner,
   # mode, etc. This is the list of attributes it will accept and pass through
   # to the generated file resource.
-  FILE_PARAMS ||= [:owner, :group, :mode]
+  FILE_PARAMS = [:owner, :group, :mode] unless defined? FILE_PARAMS
 
   FILE_PARAMS.each do |param|
     newparam(param) do
