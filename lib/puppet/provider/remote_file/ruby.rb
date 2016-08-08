@@ -125,11 +125,10 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   end
 
   # Use Net::HTTP to perform a request against a webserver, following
-  # redirects, and return the final response. This method accepts a uri, an io
-  # object to which the response body will be saved in the event of an
-  # HTTPSuccess response from the webserver, and an optional hash of options.
-  # The method will follow HTTPRedirect codes up to 10 times, and will return
-  # the final HTTPResponse.
+  # redirects, and return the final response. This method accepts a uri,
+  # an optional hash of options and a block which receives an IO handle
+  # for the response body. The method will follow HTTPRedirect codes up
+  # to 10 times, and will return the final HTTPResponse.
   #
   # @param uri [URI::HTTP] the uri to perform the request against
   # @param options [Hash] a hash of options to adjust behavior
