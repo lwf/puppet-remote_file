@@ -9,7 +9,7 @@ class Puppet::Provider::Remote_file < Puppet::Provider
   end
 
   def exists?
-    File.file? @resource[:path] &&
+    File.file?(@resource[:path]) &&
       (!checksum_specified? || specified_checksum == calculated_checksum)
   end
 
