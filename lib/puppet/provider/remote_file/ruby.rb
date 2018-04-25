@@ -138,7 +138,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, parent: Puppet::Provider::RemoteF
     raise ArgumentError, 'HTTP redirect too deep' if limit.zero?
 
     # Create the Net::HTTP connection and  request objects
-    request = REQUEST_TYPES[verb.to_s.downcase].new(uri.request_uri)
+    request = REQUEST_TYPES[verb.to_s.downcase].new(uri)
     if @resource[:headers]
       request.initialize_http_header(@resource[:headers])
     end
@@ -178,7 +178,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, parent: Puppet::Provider::RemoteF
         when Net::HTTPRedirection
           next_opts = options.merge(limit: limit - 1)
           next_loc  = URI.parse(resp['location'])
-          recursive_response = http(next_loc, next_opts, &blk)
+          recursive_response = http(uri.merge(next_loc), next_opts, &blk)
         when Net::HTTPSuccess
           yield resp if block_given?
         else
