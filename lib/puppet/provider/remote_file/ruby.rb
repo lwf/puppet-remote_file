@@ -7,7 +7,7 @@ require 'time'
 require 'pathname'
 require Pathname.new(__FILE__).dirname.dirname.expand_path + 'remote_file'
 
-Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remote_file) do
+Puppet::Type.type(:remote_file).provide(:ruby, parent: Puppet::Provider::RemoteFile) do
   desc "remote_file using Net::HTTP from Ruby's standard library."
 
   has_feature :lastmodified
@@ -17,7 +17,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   REQUEST_TYPES = {
     'get'  => Net::HTTP::Get,
     'head' => Net::HTTP::Head,
-  }
+  }.freeze
 
   # Create the resource if it does not exist.
   #
@@ -32,14 +32,14 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     return @remote_mtime if @remote_mtime
     src = URI.parse(@resource[:source])
     case src.scheme
-    when /https?/
+    when %r{https?}
       response = http_head(src)
-      if !response.header['last-modified']
-        raise Puppet::Error.new "#{src} does not provide last-modified header"
+      unless response.header['last-modified']
+        raise Puppet::Error, "#{src} does not provide last-modified header"
       end
       @remote_mtime = Time.parse(response.header['last-modified'])
     else
-      raise Puppet::Error.new "Unable to ensure latest on #{src}"
+      raise Puppet::Error, "Unable to ensure latest on #{src}"
     end
   end
 
@@ -55,18 +55,17 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   # Raise if the checksum is found to be inconsistent.
   #
   def validate_checksum
-    raise Puppet::Error.new "Inconsistent checksums. Checksum of fetched file is #{calculated_checksum}. You specified #{specified_checksum}" if calculated_checksum != specified_checksum
+    raise Puppet::Error, "Inconsistent checksums. Checksum of fetched file is #{calculated_checksum}. You specified #{specified_checksum}" if calculated_checksum != specified_checksum
   end
-
 
   # Determine and begin the appropriate method of getting the target file.
   #
   def get(url)
     p = URI.parse url
     case p.scheme
-    when /https?/
+    when %r{https?}
       http_get p, @resource[:path]
-    when "file"
+    when 'file'
       FileUtils.copy p.path, @resource[:path]
     end
   end
@@ -74,54 +73,52 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
   # Perform an HTTP HEAD request and return the response.
   #
   def http_head(uri)
-    http(uri, :http_method => 'head')
+    http(uri, http_method: 'head')
   end
 
   # Perform an HTTP GET request, saving the body in the specified download
   # path, and return the result.
   #
   def http_get(uri, download_path)
-
     # We'll save to a tempfile in case something goes wrong in the download
     # process. This avoids accidentally overwriting an old version, or
     # leaving a partially downloaded file in place
-    begin
-      tempfile = Tempfile.new('remote_file')
-      tempfile.binmode
-      response = http(uri) do |resp|
-        resp.read_body do |chunk|
-          tempfile.write(chunk)
-        end
+
+    tempfile = Tempfile.new('remote_file')
+    tempfile.binmode
+    response = http(uri) do |resp|
+      resp.read_body do |chunk|
+        tempfile.write(chunk)
       end
-
-      # If download was successful, copy the tempfile over to the resource path.
-      if response.kind_of?(Net::HTTPSuccess)
-        tempfile.flush
-
-        # Try to move the file from the temp location to the final destination.
-        # If the move operation fails due to permission denied, try a copy
-        # before giving up. On some platforms (Windows) file locking or weird
-        # permissions may cause the mv operation to fail but will still allow
-        # the copy operation to succeed.
-        begin
-          FileUtils.mv(tempfile.path, download_path)
-        rescue Errno::EACCES
-          FileUtils.cp(tempfile.path, download_path)
-        end
-
-        # If the fileserver supports the last-modified header, make sure the
-        # file saved has a matching timestamp. This may be used later to do a
-        # very rough ensure=latest kind of check.
-        if response.header['last-modified']
-          time = Time.parse(response.header['last-modified'])
-          File.utime(time, time, download_path)
-        end
-      end
-    ensure
-      tempfile.close
-      tempfile.unlink
-      response
     end
+
+    # If download was successful, copy the tempfile over to the resource path.
+    if response.is_a?(Net::HTTPSuccess)
+      tempfile.flush
+
+      # Try to move the file from the temp location to the final destination.
+      # If the move operation fails due to permission denied, try a copy
+      # before giving up. On some platforms (Windows) file locking or weird
+      # permissions may cause the mv operation to fail but will still allow
+      # the copy operation to succeed.
+      begin
+        FileUtils.mv(tempfile.path, download_path)
+      rescue Errno::EACCES
+        FileUtils.cp(tempfile.path, download_path)
+      end
+
+      # If the fileserver supports the last-modified header, make sure the
+      # file saved has a matching timestamp. This may be used later to do a
+      # very rough ensure=latest kind of check.
+      if response.header['last-modified']
+        time = Time.parse(response.header['last-modified'])
+        File.utime(time, time, download_path)
+      end
+    end
+  ensure
+    tempfile.close
+    tempfile.unlink
+    response
   end
 
   # Use Net::HTTP to perform a request against a webserver, following
@@ -138,10 +135,10 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
     verb    = options[:http_method] || 'get'
     limit   = options[:limit]       || 10
 
-    raise ArgumentError, 'HTTP redirect too deep' if limit == 0
+    raise ArgumentError, 'HTTP redirect too deep' if limit.zero?
 
     # Create the Net::HTTP connection and  request objects
-    request    = REQUEST_TYPES[verb.to_s.downcase].new(uri.request_uri)
+    request = REQUEST_TYPES[verb.to_s.downcase].new(uri)
     if @resource[:headers]
       request.initialize_http_header(@resource[:headers])
     end
@@ -152,7 +149,7 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
       @resource[:proxy_host] || nil,
       @resource[:proxy_port] || nil,
       @resource[:proxy_username] || nil,
-      @resource[:proxy_password] || nil
+      @resource[:proxy_password] || nil,
     )
 
     # Configure the Net::HTTP connection object
@@ -160,15 +157,15 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
       connection.use_ssl = true
     end
 
-    if connection.use_ssl? and @resource[:verify_peer] == false
+    if connection.use_ssl? && @resource[:verify_peer] == false
       connection.verify_mode = OpenSSL::SSL::VERIFY_NONE
     end
 
     # Configure the Net::HTTPRequest object
     if options[:headers]
-      options[:headers].each {|key,value| request[key] = value }
+      options[:headers].each { |key, value| request[key] = value }
     end
-      
+
     if @resource[:username]
       request.basic_auth(@resource[:username], @resource[:password])
     end
@@ -179,13 +176,13 @@ Puppet::Type.type(:remote_file).provide(:ruby, :parent => Puppet::Provider::Remo
         # Determine and react to the request result
         case resp
         when Net::HTTPRedirection
-          next_opts = options.merge(:limit => limit - 1)
+          next_opts = options.merge(limit: limit - 1)
           next_loc  = URI.parse(resp['location'])
-          recursive_response = http(next_loc, next_opts, &blk)
+          recursive_response = http(uri.merge(next_loc), next_opts, &blk)
         when Net::HTTPSuccess
           yield resp if block_given?
         else
-          raise Puppet::Error.new "Unexpected response code #{resp.code}: #{resp.read_body}"
+          raise Puppet::Error, "Unexpected response code #{resp.code}: #{resp.read_body}"
         end
       end
     end
