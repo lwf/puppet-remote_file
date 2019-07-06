@@ -54,9 +54,9 @@ subsequent runs, so long as that file still exists, the resource will be
 considered in sync.
 
 The `remote_file` type supports tighter synchronization tolerances either
-through the specification of a checksum or by checking a remote HTTP
-server's Last-Modified header. For example, the following resource specifies a
-checksum:
+through the specification of a checksum, or by checking a remote HTTP server's
+Last-Modified header or using the FTP `MDTM` command. For example, the following
+resource specifies a checksum:
 
 ```puppet
 remote_file { '/path/to/your/file':
@@ -125,6 +125,8 @@ If a username and/or password are required to authenticate to your proxy, you
 can specify these either as part of the `proxy` URI, or separately using the
 `proxy_username` and `proxy_password` parameters.
 
+Note that `proxy` is not supported for files fetched using FTP.
+
 ## Reference
 
 ### Type: remote_file
@@ -137,7 +139,7 @@ can specify these either as part of the `proxy` URI, or separately using the
 * `source`: The source location of the file, or where to get it from if it is
   needed. This should be a URI.
 * `checksum`: Checksum of this file. Hash function used is specified by the `checksum_type`
-  parameter. A new copy of the file will not be downloaded if the local file's 
+  parameter. A new copy of the file will not be downloaded if the local file's
   checksum matches this value.
 * `checksum_type`: Hash algorithm to use for checksumming. Supports the same arguments
   as [the checksum parameter of the File type](https://docs.puppetlabs.com/references/latest/type.html#file-attribute-checksum).
@@ -169,7 +171,7 @@ using Net::HTTP from Ruby's standard library.
 ## Limitations
 
 Currently only http, https, and file URI sources are supported by the default
-ruby provider. 
+ruby provider.
 
 ## License
 

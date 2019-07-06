@@ -79,7 +79,7 @@ Puppet::Type.newtype(:remote_file) do
   newparam(:source) do
     desc 'Location of the source file.'
     validate do |value|
-      unless value =~ URI.regexp(%w[http https file])
+      unless value =~ URI.regexp(%w[http https file ftp])
         raise ArgumentError, '%s is not a valid URL' % value
       end
     end
@@ -137,6 +137,10 @@ Puppet::Type.newtype(:remote_file) do
 
     validate do |url|
       URI.parse(url).is_a?(URI::HTTP)
+
+      if @resource[:source] =~ /^ftp/
+        raise ArgumentError, "proxy cannot be used with FTP sources"
+      end
     end
 
     munge do |url|
@@ -150,6 +154,14 @@ Puppet::Type.newtype(:remote_file) do
     validate do |value|
       if @resource[:proxy] && @resource[:proxy].host != value
         raise 'Conflict between proxy and proxy_host parameters.'
+      end
+
+      if @resource[:proxy] && @resource[:proxy].host != value
+        raise 'Conflict between proxy and proxy_host parameters.'
+      end
+
+      if @resource[:source] =~ /^ftp/
+        raise ArgumentError, "proxy cannot be used with FTP sources"
       end
     end
 
