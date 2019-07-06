@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'net/ftp'
 require 'net/http'
 require 'net/https'
 require 'uri'
@@ -38,6 +39,8 @@ Puppet::Type.type(:remote_file).provide(:ruby, parent: Puppet::Provider::RemoteF
         raise Puppet::Error, "#{src} does not provide last-modified header"
       end
       @remote_mtime = Time.parse(response.header['last-modified'])
+    when 'ftp'
+      @remote_mtime = ftp_mtime(src)
     else
       raise Puppet::Error, "Unable to ensure latest on #{src}"
     end
@@ -65,8 +68,58 @@ Puppet::Type.type(:remote_file).provide(:ruby, parent: Puppet::Provider::RemoteF
     case p.scheme
     when %r{https?}
       http_get p, @resource[:path]
+    when 'ftp'
+      ftp_get p, @resource[:path]
     when 'file'
       FileUtils.copy p.path, @resource[:path]
+    end
+  end
+
+  def ftp_mtime(uri)
+    Puppet.debug "checking mtime for '#{uri}'"
+    ftp = Net::FTP.new(uri.host)
+    ftp.login
+    dir, file = File.split(uri.path)
+    ftp.chdir(dir)
+
+    ftp.mtime(file)
+  end
+
+  def ftp_get(uri, download_path)
+    Puppet.debug "downloading '#{uri}' to '#{download_path}'"
+    tempfile = Tempfile.new('remote_file')
+    tempfile.binmode
+
+    ftp = Net::FTP.new(uri.host)
+    ftp.login
+    dir, file = File.split(uri.path)
+    ftp.chdir(dir)
+    mtime = ftp.mtime(file)
+    ftp.getbinaryfile(file, tempfile)
+
+    tempfile.flush
+
+    # Try to move the file from the temp location to the final destination.
+    # If the move operation fails due to permission denied, try a copy
+    # before giving up. On some platforms (Windows) file locking or weird
+    # permissions may cause the mv operation to fail but will still allow
+    # the copy operation to succeed.
+    begin
+      FileUtils.mv(tempfile.path, download_path)
+    rescue Errno::EACCES
+      FileUtils.cp(tempfile.path, download_path)
+    end
+
+    # If the fileserver supports the last-modified header, make sure the
+    # file saved has a matching timestamp. This may be used later to do a
+    # very rough ensure=latest kind of check.
+    if mtime
+      File.utime(mtime, mtime, download_path)
+    end
+  ensure
+    if tempfile
+      tempfile.close
+      tempfile.unlink
     end
   end
 

@@ -79,7 +79,7 @@ Puppet::Type.newtype(:remote_file) do
   newparam(:source) do
     desc 'Location of the source file.'
     validate do |value|
-      unless value =~ URI.regexp(%w[http https file])
+      unless value =~ URI.regexp(%w[http https file ftp])
         raise ArgumentError, '%s is not a valid URL' % value
       end
     end
