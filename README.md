@@ -1,5 +1,9 @@
 # remote_file
 
+Note: this repository is archived due to conflicting values demonstrated by the [stewards of GitHub](https://github.com/orgs/community/discussions/159749).
+
+Canonical sources for this module are available at [Codeberg](https://codeberg.org/torbjorn/puppet-remote_file).
+
 #### Table of Contents
 
 1. [Overview](#overview)
@@ -133,30 +137,30 @@ can specify these either as part of the `proxy` URI, or separately using the
 
 * `ensure`: Valid values are present, absent, latest.
 * `path`: Namevar. The local path to the file, or where to save the remote
-  content to.
+content to.
 * `source`: The source location of the file, or where to get it from if it is
-  needed. This should be a URI.
+needed. This should be a URI.
 * `checksum`: Checksum of this file. Hash function used is specified by the `checksum_type`
-  parameter. A new copy of the file will not be downloaded if the local file's 
-  checksum matches this value.
+parameter. A new copy of the file will not be downloaded if the local file's 
+checksum matches this value.
 * `checksum_type`: Hash algorithm to use for checksumming. Supports the same arguments
-  as [the checksum parameter of the File type](https://docs.puppetlabs.com/references/latest/type.html#file-attribute-checksum).
+as [the checksum parameter of the File type](https://docs.puppetlabs.com/references/latest/type.html#file-attribute-checksum).
 * `verify_peer`: Boolean. Whether or not to require verification of the the
-  remote server identity.
+remote server identity.
 * `username`: Username to use for basic authentication.
 * `password`: Password to use for basic authentication.
 * `proxy`: The full URI of an http/https proxy to use, as it would be specified
-  in an environment variable; e.g. `http://myproxy.local:3128`.
+in an environment variable; e.g. `http://myproxy.local:3128`.
 * `proxy_host`: The host name of an http/https proxy to use. Not required if
-  the `proxy` parameter is used.
+the `proxy` parameter is used.
 * `proxy_port`: If using a proxy, the port to use to connect to the proxy. Not
-  required if the `proxy` parameter is used.
+required if the `proxy` parameter is used.
 * `proxy_username`: If using a proxy, the username to use to authenticate to
-  the proxy.
+the proxy.
 * `proxy_password`: If using a proxy, the password to use to authenticate to
-  the proxy.
+the proxy.
 * `headers`: Hash containing extra HTTP headers (can be
-  overriden by other conflicting parameters)
+overriden by other conflicting parameters)
 * `owner`: owner attribute of the file. See the File type for details.
 * `group`: group attribute of the file. See the File type for details.
 * `mode`: mode attribute of the file. See the File type for details.
